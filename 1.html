@@ -1,0 +1,56 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerador de Áudio</title>
+</head>
+<body>
+  <textarea id="texto" rows="10" cols="50"></textarea><br>
+  <label for="voiceSelect">Escolha a voz: </label>
+  <select id="voiceSelect"></select><br>
+  <label for="speedControl">Velocidade: </label>
+  <input type="range" id="speedControl" min="1" max="2" step="0.1" value="0.5"><br>
+  <button id="startReadingButton">Iniciar Leitura</button>
+
+  <script>
+    let voices = [];
+
+    function populateVoiceList() {
+      voices = speechSynthesis.getVoices();
+      const voiceSelect = document.getElementById('voiceSelect');
+      voiceSelect.innerHTML = voices.map((voice, index) => `<option value="${index}">${voice.name}</option>`).join('');
+    }
+
+    function startReading() {
+      const textoOriginal = document.getElementById('texto').value;
+      const textoFormatado = formatarTexto(textoOriginal);
+      const selectedVoiceIndex = document.getElementById('voiceSelect').value;
+      const selectedVoice = voices[selectedVoiceIndex];
+      const speed = parseFloat(document.getElementById('speedControl').value);
+
+      if (!textoOriginal) return alert('Digite algum texto!');
+
+      const utterance = new SpeechSynthesisUtterance(textoFormatado);
+      utterance.voice = selectedVoice;
+      utterance.rate = speed;
+      speechSynthesis.speak(utterance);
+    }
+
+    function formatarTexto(texto) {
+      return texto.replace(/\b(\d?\s*[a-zA-ZáéíóúÁÉÍÓÚçÇ]+)\s+(\d+):(\d+)(-\d+)?\b/g, function(match, livro, capitulo, versiculoInicial, versiculoFinal) {
+        return livro + ' capítulo ' + capitulo + ', versículo' + (versiculoFinal ? 's ' : ' ') + versiculoInicial + (versiculoFinal ? ' a' + versiculoFinal : '');
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      populateVoiceList();
+      document.getElementById('startReadingButton').addEventListener('click', startReading);
+    });
+
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = populateVoiceList;
+    }
+  </script>
+</body>
+</html>
